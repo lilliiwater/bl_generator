@@ -11,20 +11,20 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = doc[0]
 
-    # 1. Trouver et masquer le mot "Facture"
-    facture_zone = page.search_for("Facture")
-    if facture_zone:
-        coord = facture_zone[0]
-        page.add_redact_annot(coord, fill=(1, 1, 1))
-        # Insérer "BON DE LIVRAISON" exactement à la même position
-        page.insert_text((50, 70), "BON DE LIVRAISON", fontsize=14, fontname="helv", fill=BLEU_LOGO)
+   # Supprimer l'ancien mot "Facture" s'il existe
+facture_zone = page.search_for("Facture")
+if facture_zone:
+    r = facture_zone[0]
+    page.add_redact_annot(r, fill=(1, 1, 1))
+    page.apply_redactions()
 
-    # 2. Masquer les colonnes Prix u. HT, TVA, Total HT
-    mots_prix = ["Prix u. HT", "TVA (%)", "Total HT"]
-    for mot in mots_prix:
-        for r in page.search_for(mot):
-            rect = fitz.Rect(r.x0, r.y0, r.x1 + 50, 800)
-            page.add_redact_annot(rect, fill=(1, 1, 1))
+# Insérer "BON DE LIVRAISON" à la place prévue, bien sous le logo
+page.insert_text(
+    (400, 70),  # x = marge de gauche observée, y = sous le logo
+    "BON DE LIVRAISON",
+    fontsize=14,
+    fontname="helv",
+    fill=BLEU_LOGO
 
     # 3. Masquer tout en dessous de "Détails TVA"
     tva_zone = page.search_for("Détails TVA")
