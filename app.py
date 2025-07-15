@@ -35,7 +35,7 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
 
     # 5. Ajouter "BON DE LIVRAISON" sous le logo, bien aligné (marge gauche x = 400, y estimé sous logo)
     page.insert_text(
-        (400, 70),
+        (22,2, 118,1),
         "BON DE LIVRAISON",
         fontsize=14,
         fontname="helv",
