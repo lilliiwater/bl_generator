@@ -62,22 +62,30 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     doc.close()
     return output
 
-# Interface utilisateur
-uploaded_file = st.file_uploader("📎 Sélectionner une facture PDF", type="pdf")
-infos_libres = st.text_area("📝 Infos à afficher (une ligne par produit)", height=120)
+# ---------- Interface utilisateur ----------
 
-if uploaded_file and st.button("🛠 Générer le Bon de Livraison"):
+# Corrige les erreurs d'affichage mobile (HTML-safe)
+st.markdown("""
+    <style>
+        .stDownloadButton { margin-top: 20px; }
+    </style>
+""", unsafe_allow_html=True)
+
+uploaded_file = st.file_uploader("Sélectionner une facture PDF", type="pdf")
+infos_libres = st.text_area("Infos à afficher (une ligne par produit)", height=120)
+
+if uploaded_file and st.button("Générer le Bon de Livraison"):
     input_bytes = uploaded_file.read()
     bl_pdf = facture_vers_bl(input_bytes, infos_libres)
 
-    # Nom dynamique : remplace Facture par BL
     original_name = uploaded_file.name
     new_name = original_name.replace("Facture", "BL").replace("facture", "BL")
 
     st.download_button(
-        "📥 Télécharger le BL",
+        label="Télécharger le Bon de Livraison",
         data=bl_pdf,
         file_name=new_name,
-        mime="application/pdf"
+        mime="application/pdf",
+        key="download_bl"
     )
-    st.success(f"✅ Bon de livraison prêt : {new_name}")
+    st.success(f"Bon de livraison prêt : {new_name}")
