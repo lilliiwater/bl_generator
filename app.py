@@ -35,7 +35,7 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
 
     # 5. Insérer "BON DE LIVRAISON" à la position exacte demandée
     page.insert_text(
-        (22.2, 118.1),
+        (22.2, 121),
         "BON DE LIVRAISON",
         fontsize=14,
         fontname="helv",
