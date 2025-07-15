@@ -20,10 +20,9 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     # 2. Masquer colonnes Prix u. HT, TVA, Total HT, Rem.
     mots_prix = ["Prix u. HT", "TVA (%)", "Total HT", "Rem.", "Remise"]
     for mot in mots_prix:
-    for r in page.search_for(mot):
-        # élargir le rectangle de masquage pour couvrir toute la colonne
-        rect = fitz.Rect(r.x0, r.y0, r.x1 + 50, 800)
-        page.add_redact_annot(rect, fill=(1, 1, 1))
+        for r in page.search_for(mot):
+            rect = fitz.Rect(r.x0, r.y0, r.x1 + 50, 800)
+            page.add_redact_annot(rect, fill=(1, 1, 1))
 
     # 3. Masquer tout en dessous de "Détails TVA"
     tva_zone = page.search_for("Détails TVA")
@@ -34,7 +33,7 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     # 4. Appliquer tous les masques
     page.apply_redactions()
 
-    # 5. Insérer "BON DE LIVRAISON" à la position exacte demandée
+    # 5. Insérer "BON DE LIVRAISON" à la position exacte sous le logo
     page.insert_text(
         (22.2, 130),
         "BON DE LIVRAISON",
@@ -54,7 +53,7 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     y = y_start
     for ligne in lignes_infos:
         if ligne.strip():
-            page.insert_text((300, y), ligne.strip(), fontsize=10, fontname="helv", fill=BLEU_LOGO)
+            page.insert_text((340, y), ligne.strip(), fontsize=10, fontname="helv", fill=BLEU_LOGO)
             y += 20
 
     # 7. Sauvegarde en mémoire
