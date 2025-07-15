@@ -11,38 +11,43 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = doc[0]
 
-    # 1. Masquer les colonnes PRIX dynamiquement à partir de leur titre
+    # 1. Trouver et masquer le mot "Facture"
+    facture_zone = page.search_for("Facture")
+    if facture_zone:
+        coord = facture_zone[0]
+        page.add_redact_annot(coord, fill=(1, 1, 1))
+        # Insérer "BON DE LIVRAISON" exactement à la même position
+        page.insert_text((coord.x0, coord.y0), "BON DE LIVRAISON", fontsize=14, fontname="helv", fill=BLEU_LOGO)
+
+    # 2. Masquer les colonnes Prix u. HT, TVA, Total HT
     mots_prix = ["Prix u. HT", "TVA (%)", "Total HT"]
     for mot in mots_prix:
         for r in page.search_for(mot):
-            rect = fitz.Rect(r.x0, r.y0, r.x1 + 50, 800)  # masque vers le bas
+            rect = fitz.Rect(r.x0, r.y0, r.x1 + 50, 800)
             page.add_redact_annot(rect, fill=(1, 1, 1))
 
-    # 2. Masquer en dessous de "Détails TVA"
-    tva_matches = page.search_for("Détails TVA")
-    for match in tva_matches:
-        rect = fitz.Rect(0, match.y0, 600, 850)
-        page.add_redact_annot(rect, fill=(1, 1, 1))
+    # 3. Masquer tout en dessous de "Détails TVA"
+    tva_zone = page.search_for("Détails TVA")
+    if tva_zone:
+        r = tva_zone[0]
+        page.add_redact_annot(fitz.Rect(0, r.y0, 600, 850), fill=(1, 1, 1))
 
-    # 3. Appliquer les redactions
+    # 4. Appliquer les redactions
     page.apply_redactions()
 
-    # 4. Ajouter "BON DE LIVRAISON" juste SOUS le logo (aligné dynamiquement)
-    logo_anchor = page.search_for("LiLLii Water")
-    if logo_anchor:
-        y_logo = logo_anchor[0].y1 + 10
-        x_logo = logo_anchor[0].x0
-        page.insert_text((x_logo, y_logo), "BON DE LIVRAISON", fontsize=14, fontname="helv", fill=BLEU_LOGO)
+    # 5. Aligner infos complémentaires sur la hauteur de "Quantité"
+    quantite_zone = page.search_for("Quantité")
+    y_start = 380  # par défaut
+    if quantite_zone:
+        y_start = quantite_zone[0].y1 + 15  # juste en dessous du titre
 
-    # 5. Ajouter les infos complémentaires à la place des colonnes masquées (ex: x = 300)
     lignes_infos = infos_supp.strip().splitlines()
-    y = 380  # début des lignes produits
+    y = y_start
     for ligne in lignes_infos:
         if ligne.strip():
             page.insert_text((300, y), ligne.strip(), fontsize=10, fontname="helv", fill=BLEU_LOGO)
             y += 20
 
-    # 6. Exporter le PDF en mémoire
     output = io.BytesIO()
     doc.save(output)
     doc.close()
@@ -56,7 +61,6 @@ if uploaded_file and st.button("🛠 Générer le Bon de Livraison"):
     input_bytes = uploaded_file.read()
     bl_pdf = facture_vers_bl(input_bytes, infos_libres)
 
-    # Nom dynamique : remplacer Facture → BL
     original_name = uploaded_file.name
     new_name = original_name.replace("Facture", "BL").replace("facture", "BL")
 
