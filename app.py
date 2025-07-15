@@ -3,7 +3,7 @@ import fitz  # PyMuPDF
 import io
 
 st.set_page_config(page_title="Générateur BL", page_icon="📄")
-st.title("📄 Générateur automatique de Bon de Livraison")
+st.title("Générateur automatique de Bon de Livraison")
 
 BLEU_LOGO = (43 / 255, 76 / 255, 126 / 255)
 
@@ -63,10 +63,10 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     return output
 
 # Interface utilisateur
-uploaded_file = st.file_uploader("📎 Sélectionner une facture PDF", type="pdf")
-infos_libres = st.text_area("📝 Infos à afficher (une ligne par produit)", height=120)
+uploaded_file = st.file_uploader("Sélectionner une facture PDF", type="pdf")
+infos_libres = st.text_area("Infos à afficher (une ligne par produit)", height=120)
 
-if uploaded_file and st.button("🛠 Générer le Bon de Livraison"):
+if uploaded_file and st.button("Générer le Bon de Livraison"):
     input_bytes = uploaded_file.read()
     bl_pdf = facture_vers_bl(input_bytes, infos_libres)
 
@@ -75,9 +75,9 @@ if uploaded_file and st.button("🛠 Générer le Bon de Livraison"):
     new_name = original_name.replace("Facture", "BL").replace("facture", "BL")
 
     st.download_button(
-        "📥 Télécharger le BL",
+        "Télécharger le BL",
         data=bl_pdf,
         file_name=new_name,
         mime="application/pdf"
     )
-    st.success(f"✅ Bon de livraison prêt : {new_name}")
+    st.success(f"Bon de livraison prêt : {new_name}")
