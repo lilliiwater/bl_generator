@@ -17,7 +17,7 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
         coord = facture_zone[0]
         page.add_redact_annot(coord, fill=(1, 1, 1))
         # Insérer "BON DE LIVRAISON" exactement à la même position
-        page.insert_text((coord.x0, coord.y0), "BON DE LIVRAISON", fontsize=14, fontname="helv", fill=BLEU_LOGO)
+        page.insert_text((50, 70), "BON DE LIVRAISON", fontsize=14, fontname="helv", fill=BLEU_LOGO)
 
     # 2. Masquer les colonnes Prix u. HT, TVA, Total HT
     mots_prix = ["Prix u. HT", "TVA (%)", "Total HT"]
