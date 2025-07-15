@@ -17,7 +17,7 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
         r = facture_zone[0]
         page.add_redact_annot(r, fill=(1, 1, 1))
 
-    # 2. Masquer colonnes prix (Prix u. HT, TVA, Total HT)
+    # 2. Masquer colonnes Prix u. HT, TVA, Total HT
     mots_prix = ["Prix u. HT", "TVA (%)", "Total HT"]
     for mot in mots_prix:
         for r in page.search_for(mot):
@@ -33,17 +33,17 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     # 4. Appliquer tous les masques
     page.apply_redactions()
 
-    # 5. Ajouter "BON DE LIVRAISON" sous le logo, bien aligné (marge gauche x = 400, y estimé sous logo)
+    # 5. Insérer "BON DE LIVRAISON" à la position exacte demandée
     page.insert_text(
-        (22,2, 118,1),
+        (22.2, 118.1),
         "BON DE LIVRAISON",
         fontsize=14,
         fontname="helv",
         fill=BLEU_LOGO
     )
 
-    # 6. Ajouter infos complémentaires alignées avec les quantités
-    y = 380  # hauteur de départ estimée pour les lignes produits
+    # 6. Ajouter infos complémentaires alignées à droite de "Quantité"
+    y = 380  # position de départ pour les lignes produits
     lignes_infos = infos_supp.strip().splitlines()
     for ligne in lignes_infos:
         if ligne.strip():
@@ -56,7 +56,7 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     doc.close()
     return output
 
-# Interface Streamlit
+# Interface utilisateur
 uploaded_file = st.file_uploader("📎 Sélectionner une facture PDF", type="pdf")
 infos_libres = st.text_area("📝 Infos à afficher (une ligne par produit)", height=120)
 
