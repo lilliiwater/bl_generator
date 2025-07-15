@@ -43,9 +43,12 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     )
 
     # 6. Ajouter infos complémentaires alignées à droite de "Quantité"
-    y = 380  # position de départ pour les lignes produits
+    quantite_zone = page.search_for("Quantité")
     if quantite_zone:
-         y_start = quantite_zone[0].y1 + 15
+        y_start = quantite_zone[0].y1 + 15
+    else:
+        y_start = 380  # fallback
+
     lignes_infos = infos_supp.strip().splitlines()
     y = y_start
     for ligne in lignes_infos:
