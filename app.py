@@ -5,62 +5,70 @@ import io
 st.set_page_config(page_title="Générateur BL", page_icon="📄")
 st.title("📄 Générateur automatique de Bon de Livraison")
 
-# Couleur bleu Lilliwater
 BLEU_LOGO = (43 / 255, 76 / 255, 126 / 255)
 
 def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = doc[0]
 
-    # 1. Masquer le mot "Facture"
+    # Masquer "Facture"
     for zone in page.search_for("Facture"):
         page.add_redact_annot(zone, fill=(1, 1, 1))
 
-    # 2. Masquer la colonne PRIX uniquement : à droite des titres "Prix u. HT", "TVA (%)", "Total HT"
-    keywords_to_mask = ["Prix u. HT", "TVA (%)", "Total HT"]
+    # Masquer colonnes prix à partir des titres
+    mots_prix = ["Prix u. HT", "TVA (%)", "Total HT"]
     x_positions = []
-
-    for keyword in keywords_to_mask:
-        results = page.search_for(keyword)
-        for rect in results:
-            x_positions.append(rect.x0)
+    for mot in mots_prix:
+        results = page.search_for(mot)
+        for r in results:
+            x_positions.append(r.x0)
 
     if x_positions:
         min_x = min(x_positions)
-        rect_colonne_prix = fitz.Rect(min_x, 200, 600, 800)
-        page.add_redact_annot(rect_colonne_prix, fill=(1, 1, 1))
+        rect_col = fitz.Rect(min_x, 200, 600, 800)
+        page.add_redact_annot(rect_col, fill=(1, 1, 1))
 
-    # 3. Masquer tout sous "Détails TVA"
+    # Masquer tout en dessous de "Détails TVA"
     tva_zone = page.search_for("Détails TVA")
     if tva_zone:
-        y_start = tva_zone[0].y0
-        rect_tva = fitz.Rect(0, y_start, 600, 900)
-        page.add_redact_annot(rect_tva, fill=(1, 1, 1))
+        y = tva_zone[0].y0
+        page.add_redact_annot(fitz.Rect(0, y, 600, 900), fill=(1, 1, 1))
 
     page.apply_redactions()
 
-    # 4. Ajouter "BON DE LIVRAISON" juste sous le logo (à gauche)
-    page.insert_text((50, 50), "BON DE LIVRAISON", fontsize=14, fontname="helv", fill=BLEU_LOGO)
+    # Titre "BON DE LIVRAISON" sous le logo (pas sur)
+    page.insert_text((50, 120), "BON DE LIVRAISON", fontsize=14, fontname="helv", fill=BLEU_LOGO)
 
-    # 5. Ajouter infos face aux produits, à côté des quantités
-    # Pour simplifier : insérer à partir de Y = 380, en augmentant de 20px par ligne
-    y = 380
-    for ligne in infos_supp.splitlines():
+    # Infos complémentaires en face des quantités
+    lignes_infos = infos_supp.strip().splitlines()
+    y = 380  # Aligné avec lignes produits
+    for ligne in lignes_infos:
         if ligne.strip():
             page.insert_text((300, y), ligne.strip(), fontsize=10, fontname="helv", fill=BLEU_LOGO)
             y += 20
 
-    # Générer PDF final
     output = io.BytesIO()
     doc.save(output)
     doc.close()
     return output
 
-# Interface
-uploaded_pdf = st.file_uploader("📎 Charger une facture PDF", type="pdf")
-infos_libres = st.text_area("📝 Infos à insérer ligne par ligne (face aux produits)", height=120)
+# Interface utilisateur
+uploaded_file = st.file_uploader("📎 Sélectionnez une facture PDF", type="pdf")
+infos_libres = st.text_area("📝 Infos à afficher en face des produits (une ligne = un produit)", height=120)
 
-if uploaded_pdf and st.button("🛠 Générer le Bon de Livraison"):
-    bl_pdf = facture_vers_bl(uploaded_pdf.read(), infos_libres)
-    st.download_button("📥 Télécharger le BL", bl_pdf, "bon_de_livraison.pdf", "application/pdf")
-    st.success("✅ Bon de livraison prêt.")
+if uploaded_file and st.button("🛠 Générer le Bon de Livraison"):
+    # Lire le PDF d'origine
+    input_bytes = uploaded_file.read()
+    bl_pdf = facture_vers_bl(input_bytes, infos_libres)
+
+    # Nom du fichier de sortie : remplacer "Facture" par "BL"
+    original_name = uploaded_file.name
+    new_name = original_name.replace("Facture", "BL")
+
+    st.download_button(
+        "📥 Télécharger le BL",
+        data=bl_pdf,
+        file_name=new_name,
+        mime="application/pdf"
+    )
+    st.success(f"✅ Bon de livraison prêt : {new_name}")
