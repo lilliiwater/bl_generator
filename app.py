@@ -17,12 +17,13 @@ def facture_vers_bl(pdf_bytes: bytes, infos_supp: str) -> io.BytesIO:
         r = facture_zone[0]
         page.add_redact_annot(r, fill=(1, 1, 1))
 
-    # 2. Masquer colonnes Prix u. HT, TVA, Total HT
-    mots_prix = ["Prix u. HT", "TVA (%)", "Total HT"]
+    # 2. Masquer colonnes Prix u. HT, TVA, Total HT, Rem.
+    mots_prix = ["Prix u. HT", "TVA (%)", "Total HT", "Rem.", "Remise"]
     for mot in mots_prix:
-        for r in page.search_for(mot):
-            rect = fitz.Rect(r.x0, r.y0, r.x1 + 50, 800)
-            page.add_redact_annot(rect, fill=(1, 1, 1))
+    for r in page.search_for(mot):
+        # élargir le rectangle de masquage pour couvrir toute la colonne
+        rect = fitz.Rect(r.x0, r.y0, r.x1 + 50, 800)
+        page.add_redact_annot(rect, fill=(1, 1, 1))
 
     # 3. Masquer tout en dessous de "Détails TVA"
     tva_zone = page.search_for("Détails TVA")
